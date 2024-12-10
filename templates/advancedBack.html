@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    .multiselect {
+      width: 100%;
+    }
+
+    .selectBox {
+      position: relative;
+    }
+
+    .selectBox select {
+      width: 100%;
+    }
+
+    .overSelect {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+    }
+
+    .select-options {
+      display: none;
+      border: 0.5px #7c7c7c solid;
+      background-color: #ffffff;
+      max-height: 150px;
+      overflow-y: scroll;
+    }
+
+    .select-options label {
+      display: block;
+      font-weight: normal;
+      white-space: nowrap;
+      min-height: 1.2em;
+      background-color: #ffffff00;
+      padding: 0 2.25rem 0 .75rem;
+    }
+
+    .select-options label:hover {
+      background-color: #1e90ff;
+    }
+
+    /* Use Flexbox to align dropdowns in the same line */
+    .dropdown-container {
+      display: flex;
+      gap: 20px; /* Adds spacing between dropdowns */
+    }
+
+    .form-group {
+      flex: 1; /* Makes each dropdown take equal width */
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 5px;
+    }
+  </style>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+
+<div class="container-fluid">
+  <div id="dropdownContainer" class="dropdown-container"></div>
+  <button onclick="showSelected()">Show Selected</button>
+</div>
+
+<script>
+window.onload = (event) => {
+  values = {Objects: ['person','dog'], Frames: [10,11,12], "In Frames":[1,2,3,4,5]}
+  generateDropdowns(values);
+};
+
+function generateDropdowns(values) {
+  const dropdownContainer = document.getElementById('dropdownContainer');
+  dropdownContainer.innerHTML = ''; // Clear existing dropdowns
+
+
+    for (key in values) {
+    const dropdownId = `dropdown-${key.replaceAll(' ','')}`;
+    let dropdownHtml = `
+      <div class="form-group">
+        <label for="${dropdownId}">Objects ${key}</label>
+        <div id="${dropdownId}" class="multiselect">
+          <div class="selectBox" onclick="toggleCheckboxArea('${dropdownId}')">
+            <select class="form-select">
+              <option>Select options</option>
+            </select>
+            <div class="overSelect"></div>
+          </div>
+          <div id="${dropdownId}-options" class="select-options">`;
+            for (value of values[key]){
+            dropdownHtml += `<label><input type="checkbox" value="${value}" onchange="checkboxStatusChange('${dropdownId}')"> ${value}</label>`
+            }
+            `</div>
+        </div>
+      </div>
+    `;
+    dropdownContainer.insertAdjacentHTML('beforeend', dropdownHtml);
+  }
+
+  initMultiselect(values); // Initialize the dropdowns
+}
+
+function initMultiselect(values) {
+  // for (let i = 1; i <= number; i++) {
+  for (key in values){
+    checkboxStatusChange(`dropdown-${key.replaceAll(' ','')}`);
+  }
+
+  $(document).on('click', function (e) {
+    if (!$(e.target).closest('.multiselect').length) {
+      toggleCheckboxArea(null, true); // Hide all options if clicked outside
+    }
+  });
+}
+
+function checkboxStatusChange(dropdownId) {
+  let values = [];
+  $(`#${dropdownId}-options input[type="checkbox"]:checked`).each(function () {
+    values.push($(this).val());
+  });
+
+  let dropdownValue = values.length ? values.join(', ') : 'Select options';
+  $(`#${dropdownId} select option`).text(dropdownValue);
+}
+
+function toggleCheckboxArea(dropdownId, onlyHide = false) {
+  if (dropdownId) {
+    let $checkboxes = $(`#${dropdownId}-options`);
+
+    if ($checkboxes.is(':visible')) {
+      $checkboxes.hide();
+    } else if (!onlyHide) {
+      $checkboxes.show();
+    }
+  } else if (onlyHide) {
+    $('.select-options').hide();
+  }
+}
+
+function showSelected() {
+  let selectedValues = [];
+  $('.select-options').each(function () {
+    let checked = $(this).find('input[type="checkbox"]:checked').map(function () {
+      return $(this).val();
+    }).get();
+
+    selectedValues.push(checked.length ? checked.join(', ') : 'None');
+  });
+
+  console.log('Selected Values:', selectedValues);
+}
+</script>
+
+</body>
+
+</html>

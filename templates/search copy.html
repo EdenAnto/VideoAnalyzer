@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./static/Styles/search.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <div class="bar">
+        <h1 class="text-center" onclick="(function() {window.location.href = '/';})()">Video Analysis</h1>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Object Search...">
+            <button onclick="search()">Search</button>
+        </div>
+        <p class="advanced-search-bt" onclick="openAdvancedSearch()">Advanced Search</p>
+    </div>
+    </div>
+
+    <div class="bar advanced-search-bar">
+        <div id="dropdownContainer" class="dropdown-container"></div>
+        <button onclick="showSelected()">Filter</button>
+    </div>
+    
+    
+    <div class="container">
+        <h1 id="searchH1" class="text-center">Search Results:  {{ query }}</h1>
+        {% if status == 404 %}
+            <div class="alert alert-danger">
+                {{ message }}
+            </div>
+        {% else %}
+            <div class="image-grid">
+                {% for result in results %}
+                    <div class="card" onclick="onClickCard(this)">
+                        <img src="{{ result.frameSrc }}" alt="{{ result.fileName }}">
+                        <div class="card-content">
+                            <h5 class="card-title">{{ result.videoName}}</h5>
+                            <p class="card-text">{{ result }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+        });
+        const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    search();
+                }
+            });
+        function search() {
+            const query = document.getElementById('searchInput').value;
+            if (query != '')
+                window.location.href = `/search?q=${query}`;
+        }
+
+        function onClickCard(card) {
+            const img = card.querySelector('img');
+            const imgSrc = img.src;
+            localStorage.setItem('taggedFile', img.alt);
+            localStorage.setItem('history', true);
+            window.location.href=`/res?videoname=${btoa(img.alt)}`
+ 
+        }
+        function openAdvancedSearch(){
+            $('.advanced-search-bar').slideToggle();
+            $('.advanced-search-bt').first().toggle();
+            const urlParams = new URLSearchParams(window.location.search);
+            const qParam = urlParams.get('q');
+            $(`input[type="checkbox"][value="${qParam}"]`).prop('checked', true).trigger('change');
+        }
+        function resetFilters(){
+            window.location.href = '/search';
+        }
+
+    </script>
+
+
+
+<script>
+    //advanced search script
+    window.onload = (event) => {
+        values = {{ values|tojson }};
+        const urlParams = new URLSearchParams(window.location.search);
+        const qParam = urlParams.get('q');
+      $('.advanced-search-bar').css({display:'none'})
+    //   values = {Objects: ['person','dog'], Frames: [10,11,12], "In Frames":[1,2,3,4,5]}
+      generateFilters(values);
+      if (!qParam)
+        $('.advanced-search-bt').click();
+    };
+    
+    function generateFilters(values) {
+      const dropdownContainer = $('#dropdownContainer');
+      dropdownContainer.empty(); // Clear existing dropdowns
+    
+        for (key in values) {
+        const dropdownId = `dropdown-${key.replaceAll(' ','')}`;
+        let upperKey=key.charAt(0).toUpperCase()+key.slice(1)
+        let dropdownHtml = `
+          <div class="form-group">
+            <label class="filterTitle" for="${dropdownId}">${upperKey}:</label>
+            <div id="${dropdownId}" class="multiselect">
+              <div class="selectBox" onclick="toggleCheckboxArea('${dropdownId}')">
+                <select class="form-select">
+                  <option>Select options</option>
+                </select>
+                <div class="overSelect"></div>
+              </div>
+              <div id="${dropdownId}-options" class="select-options">`;
+                for (value of values[key]){
+                dropdownHtml += `<label><input type="checkbox" value="${value}" onchange="checkboxStatusChange('${dropdownId}')"> ${value}</label>`
+                }
+                `</div>
+            </div>
+          </div>
+        `;
+        dropdownContainer.append(dropdownHtml);
+      }
+      let number = `
+        <div class="form-group">
+            <label class="filterTitle" for="dropdown-#Objects">Min Objects:</label>
+            <div id="dropdown-#Objects" class="numbers">
+                <input type="number" id="#Objects" class="form-select" min='1' value = '1' />
+            </div>
+            <label class="filterTitle" for="dropdown-#Objects">Unique Objects</label>
+        </div>
+        `;
+        dropdownContainer.append(number);
+        let minSeq = `
+        <div class="form-group">
+            <label class="filterTitle" for="dropdown-#Objects">Min Object Sequence :</label>
+            <div id="dropdown-minSeq" class="numbers">
+                <input type="number" id="minSeq" class="form-select" min='1' value = '1' disabled />
+            </div>
+            <label class="filterTitle" for="dropdown-#Objects">In Seconds</label>
+        </div>
+        `;
+        dropdownContainer.append(minSeq);
+    
+      initMultiselect(values); // Initialize the dropdowns
+      let closeAndReset = $('<div>').addClass('advanced-search-bt');
+        closeAndReset.append(
+                    $('<p>')
+                        .addClass('closeAndReset')
+                        .attr('id', 'reset')
+                        .text('Reset')
+                        .css('color', 'black')
+                        .on('click', resetFilters)
+                );
+        closeAndReset.append(
+                    $('<p>')
+                        .addClass('closeAndReset')
+                        .attr('id', 'closeAdvanced ')
+                        .text('Close')
+                        .css('color', 'black')
+                        .on('click', openAdvancedSearch)
+                );
+      $('.advanced-search-bar').append(closeAndReset)
+    }
+    
+    function initMultiselect(values) {
+      // for (let i = 1; i <= number; i++) {
+      for (key in values){
+        checkboxStatusChange(`dropdown-${key.replaceAll(' ','')}`,key);
+      }
+    
+      $(document).on('click', function (e) {
+        if (!$(e.target).closest('.multiselect').length) {
+          toggleCheckboxArea(null, true); // Hide all options if clicked outside
+        }
+      });
+    }
+    
+    function checkboxStatusChange(dropdownId,key,choice=undefined) {
+        let values = [];
+        $(`#${dropdownId}-options input[type="checkbox"]:checked`).each(function () {
+            values.push($(this).val());
+        }); 
+        if (values.length)
+            $('#minSeq').removeAttr('disabled');
+        else {
+            $('#minSeq').val(1).attr('disabled', 'disabled');
+
+        }
+
+        filter = dropdownId.split('-')[1]
+        filter=filter.charAt(0).toUpperCase()+filter.slice(1)
+
+        let dropdownValue = values.length ? values.join(', ') : `Select ${filter}`;
+        $(`#${dropdownId} select option`).text(dropdownValue);
+    }
+    
+    function toggleCheckboxArea(dropdownId, onlyHide = false) {
+      if (dropdownId) {
+        let $checkboxes = $(`#${dropdownId}-options`);
+    
+        if ($checkboxes.is(':visible')) {
+          $checkboxes.hide();
+        } else if (!onlyHide) {
+          $checkboxes.show();
+        }
+      } else if (onlyHide) {
+        $('.select-options').hide();
+      }
+    }
+    
+    async function showSelected() {
+      let filters = {};
+      $('.container h1:nth-of-type(2)').empty(); // remove not fond h1 if exist
+
+      $('.select-options').each(function () {
+        let filter=$(this).attr('id').split('-')[1]; //extract the filter
+        let checked = $(this).find('input[type="checkbox"]:checked').map(function () {
+          return $(this).val();
+        }).get(); // write the elements as string
+    
+        filters[filter]=(checked.length ? checked.join(',') : '');
+      });
+
+      $('input[type="number"]').each(function () {
+        filters[$(this).attr('id')] = $(this).val();
+      });
+
+
+      let objectsString =filters['objects'];
+      console.log(filters)
+      for (filter in filters) {
+        filters[filter] = filters[filter]==''? [] : filters[filter].split(',')
+      } // extract strings into 2d array
+      console.log(filters)
+
+      $('.image-grid').empty();
+
+      data = await searchWithFilters(filters)
+
+      if (!data){
+        let notFound = $('<h1></h1>').text('No Videos Found').css({
+        'color': 'red',
+        'text-align': 'center'  // Add text alignment to center
+        });
+        $('.container').append(notFound);  // Append the created element
+        return;
+      }
+
+      $('#searchH1').text('Search Results: ' + objectsString.replaceAll(',',' & '));  // Set the modified text back
+
+    // Clear the current image grid
+    console.log(data)
+
+    data.forEach(res => {
+        const cardHtml = `
+            <div class="card" onclick="onClickCard(this)">
+                <img src="${res.frameSrc}" alt="${res.fileName}">
+                <div class="card-content">
+                    <h5 class="card-title">${res.videoName}</h5>
+                    <p class="card-text">${res}</p>
+                </div>
+            </div>
+        `;
+
+        // Append the created card to the .image-grid
+        $('.image-grid').append(cardHtml);
+    });
+
+    }
+
+    function searchWithFilters(params) {
+        return fetch('http://localhost:5000/searchWithFilters', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(params)
+        })
+        .then(response => {
+            if (response.status === 404) {
+                console.log("No data found (404).");
+                return false; // Handle 404 Not Found
+            }
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json(); // Parse the JSON response
+        })
+        .then(data => {
+            console.log(data)
+            if (data.data && data.data.length > 0) {
+                return data.data; // Return data if found
+            } else {
+                return false; // Return false if no data is found
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            return false; // Return false if there was an error
+        });
+    }
+
+
+    </script>
+</body>
+</html>
