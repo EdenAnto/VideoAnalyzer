@@ -214,13 +214,6 @@ class MyYolo:
             object_statistics[key]["maxSequence"]["count"]= len(seq)
         
 
-        # הדפסת הסטטיסטיקות
-        print("object_statistics:")
-        for vehicle_type, properties in object_statistics.items():
-                print(f"Total data about {vehicle_type}:")
-                for property, value in properties.items():
-                    print(f"Total {property}: {value}")
-        print(object_statistics)
         return {"frame":frame_statistics,"object":object_statistics,"video":video_statistics}
 
 

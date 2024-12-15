@@ -26,7 +26,7 @@
                     <div class="form-group">
                         <label for="videoFile">Video Name:</label>
                         <input type="text" class="form-control" id="nameTB" name="nameTB" required>
-                        <input type="checkbox" onclick="onClickCBox()"> Edit</input>
+                        <input type="checkbox" id="checkBox" onclick="onClickCBox()" disabled> Edit</input>
                     </div>
                     <button type="submit" class="btn btn-primary btn-block">Upload</button>
                 </form>
@@ -75,7 +75,6 @@
 
         function onClickCBox(){
             input =$('#nameTB')
-            console.log(input)
             // Check if the input is currently disabled
             if (input.prop('disabled')) {
                 // Enable the input
@@ -93,14 +92,16 @@
         }
 
         $(document).ready(function() {
+            $('#nameTB').prop('disabled', true);
             $('.card-processing img').after('<p>Processing</p>');
             $('#videoFile').on('change', function() {
                 let fileName = $(this).val().split('\\').pop().split('.')[0]; // Get the file name
                 $('#nameTB').val(fileName)
+                $('#checkBox').prop('disabled', false);
             });
 
             $('#uploadForm').submit(function(event) {
-                $('#nameTB').prop('disabled', false);
+                //$('#nameTB').prop('disabled', false);
                 event.preventDefault();
                 console.log(this)
                 var formData = new FormData(this);

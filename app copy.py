@@ -27,8 +27,7 @@ db = client.get_database('VideoAnalyze')
 dbPrompts = db['data']
 
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
-
+socketio = SocketIO(app, cors_allowed_origins="*")  # Enable CORS for SocketIO
 
 model = YOLOv10(f'./Configuration/weights/yolov10s.pt')
 updated_prompt_workspace = {}
@@ -425,6 +424,7 @@ def close_logger(logger):
         handler.close()
         logger.removeHandler(handler)
 
-
+# if __name__ == '__main__':
+#     app.run(debug=True, use_reloader=True)
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    socketio.run(app, port=5000)

@@ -13,8 +13,9 @@
 		var progressStatus='';
         $(document).ready(function() {
 			progressStatus = document.getElementById('status');
-            const socket = io('http://localhost:5000');
-
+            const socket = io(`${window.location.protocol}//${window.location.hostname}:5000`);
+            //  const socket = io();
+            console.log(socket)
             function nextStep(step) {
 					console.log(step);
                     var percentage = (step / steps) * 100;
@@ -26,6 +27,8 @@
 
             // Listen for 'update' events
             socket.on(`update@${videoName2}`, function(data) {
+                console.log("print data:")
+                console.log(data)
                 if (data.obj)
                     document.getElementById('updates').innerText = `Object detected: ${data.obj}`;
                 progressStatus.innerText = data.status;
