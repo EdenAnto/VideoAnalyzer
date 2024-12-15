@@ -26,7 +26,6 @@
                     <div class="form-group">
                         <label for="videoFile">Video Name:</label>
                         <input type="text" class="form-control" id="nameTB" name="nameTB" required>
-                        <input type="checkbox" id="checkBox" onclick="onClickCBox()" disabled> Edit</input>
                     </div>
                     <button type="submit" class="btn btn-primary btn-block">Upload</button>
                 </form>
@@ -73,18 +72,6 @@
             window.location.href=`/res?videoname=${btoa(img.alt)}`
         }
 
-        function onClickCBox(){
-            input =$('#nameTB')
-            // Check if the input is currently disabled
-            if (input.prop('disabled')) {
-                // Enable the input
-                input.prop('disabled', false);
-            } else {
-                // Disable the input
-                input.prop('disabled', true);
-            }
-        }
-
         function search() {
             const query = document.getElementById('searchInput').value;
             if (query != '')
@@ -97,7 +84,8 @@
             $('#videoFile').on('change', function() {
                 let fileName = $(this).val().split('\\').pop().split('.')[0]; // Get the file name
                 $('#nameTB').val(fileName)
-                $('#checkBox').prop('disabled', false);
+                $('#nameTB').prop('disabled', false);
+
             });
 
             $('#uploadForm').submit(function(event) {
